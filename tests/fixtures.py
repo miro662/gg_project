@@ -3,6 +3,7 @@ import dataclasses
 import networkx as nx
 import pytest
 from gg_project.productions.p1 import Production1
+from gg_project.productions.p2 import Production2
 from gg_project.vertex_params import VertexParams, VertexType
 
 
@@ -27,6 +28,11 @@ def start_graph():
 @pytest.fixture
 def production1():
     return Production1()
+
+
+@pytest.fixture
+def production2():
+    return Production2()
 
 
 @pytest.fixture
