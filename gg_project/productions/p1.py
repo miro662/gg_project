@@ -31,9 +31,7 @@ class Production1(Production):
         new_graph = graph.copy()
         assert len(subgraph.nodes) == 1
 
-        start_node_id, start_node_data = next(iter(subgraph.nodes.items()))
-
-        vdata = VertexParams(**start_node_data)
-        new_graph.nodes[start_node_id]["vertex_type"] = vdata
+        start_node_id, _ = next(iter(subgraph.nodes.items()))
+        new_graph.nodes[start_node_id]["vertex_type"] = VertexType.START_USED
 
         return new_graph
