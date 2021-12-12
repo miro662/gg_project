@@ -9,8 +9,8 @@ import networkx as nx
 class Production(abc.ABC):
     """A single production"""
 
-    @abc.abstractmethod
     @classmethod
+    @abc.abstractmethod
     def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> nx.Graph | None:
         """Find one subgraph isomorphic to the left side of production
 
@@ -20,8 +20,8 @@ class Production(abc.ABC):
                   if isomorphic subgraph is not found
         """
 
-    @abc.abstractmethod
     @classmethod
+    @abc.abstractmethod
     def apply(cls, graph: nx.Graph, subgraph: nx.Graph) -> nx.Graph:
         """Apply production to graph in the position denoted by subgraph
 
