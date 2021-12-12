@@ -20,9 +20,11 @@ repos:
     hooks:
     - id: mypy
       language: python
--   repo: https://github.com/pycqa/pylint
-    rev: pylint-2.6.0
+-   repo: local
     hooks:
-    -   id: pylint
-        args:
-        - --rcfile=./.pylintrc
+    - id: pylint
+      name: pylint
+      entry: poetry run pylint gg_project
+      language: system
+      always_run: true
+      pass_filenames: false
