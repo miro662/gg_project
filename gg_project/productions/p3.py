@@ -5,7 +5,7 @@ import networkx as nx
 from gg_project.vertex_params import VertexParams, VertexType
 
 from . import Production
-from .utils import _all_neighbors_of_type
+from .utils import all_neighbors_of_type
 
 import itertools
 
@@ -55,12 +55,14 @@ class Production3(Production):
     @classmethod
     def find_isomorphic_to_left_side(cls, graph: nx.Graph):
         for node_id, params in graph.nodes.items():
-            if (VertexParams(**params)).vertex_type == VertexType.INTERIOR:
-                if _all_neighbors_of_type(graph, node_id, VertexType.EXTERIOR):
-                    order = _find_correct_graph_order(graph, node_id)
-                    if order is not None:
-                        a, b, c, d = order
-                        return graph.subgraph([node_id, a, b, c, d])
+            if (
+                    VertexParams(**params).vertex_type == VertexType.INTERIOR
+                    and all_neighbors_of_type(graph, node_id, VertexType.EXTERIOR)
+            ):
+                order = _find_correct_graph_order(graph, node_id)
+                if order is not None:
+                    a, b, c, d = order
+                    return graph.subgraph([node_id, a, b, c, d])
 
         return None
 
@@ -80,17 +82,6 @@ class Production3(Production):
 
         new_graph.nodes[interior_node_id]["vertex_type"] = VertexType.INTERIOR_USED
 
-        new_graph.add_nodes_from(
-            [
-                (
-                    2137,  #
-                    dataclasses.asdict(
-                        VertexParams(
-                            vertex_type=VertexType.START, position=(0.0, 0.0), level=0
-                        )
-                    ),
-                )
-            ]
-        )
+        # TODO: implement nodes adding
 
         return new_graph
