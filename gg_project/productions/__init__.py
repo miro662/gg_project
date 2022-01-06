@@ -2,6 +2,7 @@
 """
 
 import abc
+from typing import Iterator
 
 import networkx as nx
 
@@ -11,13 +12,12 @@ class Production(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> nx.Graph | None:
+    def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> Iterator[nx.Graph]:
         """Find one subgraph isomorphic to the left side of production
 
         :param graph: graph in which isomorphic subgraph will be searched for
 
-        :returns: subgraph view that matches the left side of production or None
-                  if isomorphic subgraph is not found
+        :returns: iteratio over all subgraph views that matches the left side of production
         """
 
     @classmethod

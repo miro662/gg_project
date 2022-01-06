@@ -6,7 +6,10 @@ Grzegorz Wcisło
 Karol Szuster
 """
 
+from typing import Iterator
+
 import networkx as nx
+
 from gg_project.vertex_params import VertexParams, VertexType
 
 from . import Production
@@ -19,12 +22,10 @@ class Production1(Production):
     """
 
     @classmethod
-    def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> nx.Graph | None:
+    def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> Iterator[nx.Graph]:
         for node_id, params in graph.nodes.items():
             if VertexParams(**params).vertex_type == VertexType.START:
-                return graph.subgraph([node_id])
-
-        return None
+                yield graph.subgraph([node_id])
 
     @classmethod
     def apply(cls, graph: nx.Graph, subgraph: nx.Graph) -> nx.Graph:
