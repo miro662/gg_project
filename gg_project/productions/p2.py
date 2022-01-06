@@ -14,7 +14,7 @@ import copy
 import dataclasses
 import itertools
 import math
-from typing import Sequence
+from typing import Sequence, Callable
 import networkx as nx
 from gg_project.vertex_params import VertexParams, VertexType
 from gg_project.productions import Production
@@ -26,19 +26,26 @@ NodeId = int
 Node = collections.namedtuple("Node", ["id", "params"])
 
 
-def _all_neighbors_of_type(
+def _get_neighbors_of_type(
     graph: nx.Graph, node_id: NodeId, vertex_type: VertexType
-) -> bool:
-    neighbor_types = (
-        VertexParams(**graph.nodes[neighbor_id]).vertex_type
-        for neighbor_id in graph.neighbors(node_id)
-    )
-    return all(neighbor_type == vertex_type for neighbor_type in neighbor_types)
+) -> list[Node]:
+    return [
+        neighbor
+        for neighbor in graph.neighbors(node_id)
+        if graph.nodes[neighbor]["vertex_type"] == vertex_type
+    ]
 
 
-def _next_node_id(graph: nx.Graph) -> NodeId:
-    # This gets called a lot but whatever
-    return max(graph.nodes) + 1
+def _graph_id_sequence(graph: nx.Graph) -> Callable[[], NodeId]:
+    next_id = max(graph.nodes) + 1
+
+    def internal():
+        nonlocal next_id
+        rv = next_id
+        next_id += 1
+        return rv
+
+    return internal
 
 
 def _node_distance(params1: VertexParams, params2: VertexParams) -> float:
@@ -52,7 +59,7 @@ def _node_distance(params1: VertexParams, params2: VertexParams) -> float:
 def _find_hypotenuse_nodes(triangle_graph_nodes: Sequence[Node]) -> tuple[Node, Node]:
     assert len(triangle_graph_nodes) == 3
 
-    return min(
+    return max(
         itertools.combinations(triangle_graph_nodes, 2),
         key=lambda node_pair: _node_distance(node_pair[0].params, node_pair[1].params),
     )
@@ -66,19 +73,19 @@ def _node_line_middle(
     return (x1 + x2) / 2, (y1 + y2) / 2
 
 
-def _move_down_node(params: VertexParams, new_id: int) -> Node:
-    return Node(new_id, dataclasses.replace(params, level=params.level + 1))
+def _move_down_node(params: VertexParams) -> VertexParams:
+    return dataclasses.replace(params, level=params.level + 1)
 
 
-def _create_middle_node(graph: nx.Graph, node1: Node, node2: Node) -> Node:
+def _hypotenuse_middle_node_params(node1: Node, node2: Node) -> VertexParams:
     mid_x, mid_y = _node_line_middle(node1.params, node2.params)
-    return Node(_next_node_id(graph), dataclasses.replace(node1, x=mid_x, y=mid_y))
-
-
-def _move_down_nodes(graph: nx.Graph, nodes: Sequence[Node]) -> Sequence[Node]:
-    return list(
-        map(lambda node: _move_down_node(node.params, _next_node_id(graph)), nodes)
+    return dataclasses.replace(
+        node1.params, position=(mid_x, mid_y), level=node1.params.level + 1
     )
+
+
+def _get_params_with_lower_level(nodes: Sequence[Node]) -> Sequence[VertexParams]:
+    return list(map(lambda node: _move_down_node(node.params), nodes))
 
 
 def _create_edges(
@@ -117,12 +124,15 @@ class Production2(Production):
             if (VertexParams(**params)).vertex_type != VertexType.INTERIOR:
                 continue
 
-            if not _all_neighbors_of_type(graph, node_id, VertexType.EXTERIOR):
+            exterior_neighbors = _get_neighbors_of_type(
+                graph, node_id, VertexType.EXTERIOR
+            )
+            if len(exterior_neighbors) != 3:
                 continue
 
             with contextlib.suppress(nx.NetworkXNoCycle):
-                nx.find_cycle(graph, graph.subgraph(graph.neighbors(node_id)))
-                return graph.subgraph([node_id, *graph.neighbors(node_id)])
+                nx.find_cycle(graph, graph.subgraph(exterior_neighbors))
+                return graph.subgraph([node_id, *exterior_neighbors])
 
         return None
 
@@ -131,46 +141,52 @@ class Production2(Production):
         assert len(subgraph.nodes) == 4
 
         new_graph = copy.deepcopy(graph)
+        next_id_val_fun = _graph_id_sequence(graph)
         subgraph_nodes: list[Node] = list(
             map(
                 lambda node: Node(node[0], VertexParams(**node[1])),
                 subgraph.nodes.items(),
             )
         )
-        # For now assume the first node of subgraph is the internal node
-        # (which is true but ugly)
-        internal_node = subgraph_nodes[0]
-        new_level = internal_node.params.level + 1
+        internal_node = next(
+            filter(
+                lambda node: node.params.vertex_type == VertexType.INTERIOR,
+                subgraph_nodes,
+            )
+        )
         used_internal_node = Node(
             internal_node.id,
-            dataclasses.replace(internal_node.id, vertex_type=VertexType.INTERIOR_USED),
+            dataclasses.replace(
+                internal_node.params, vertex_type=VertexType.INTERIOR_USED
+            ),
         )
-        new_internal_nodes = [
-            Node(
-                _next_node_id(graph),
-                VertexParams(
-                    vertex_type=VertexType.INTERIOR,
-                    level=new_level,
-                    position=(0.0, 0.0),
-                ),
-            ),
-            Node(
-                _next_node_id(graph),
-                VertexParams(
-                    vertex_type=VertexType.INTERIOR,
-                    level=new_level,
-                    position=(0.0, 0.0),
-                ),
-            ),
-        ]
+        new_internal_nodes = list(
+            map(
+                lambda params: Node(next_id_val_fun(), params),
+                _get_params_with_lower_level([internal_node, internal_node]),
+            )
+        )
 
-        external_nodes = subgraph_nodes[1:]
+        external_nodes = list(
+            filter(lambda node: node != internal_node, subgraph_nodes)
+        )
         hypotenuse_nodes = _find_hypotenuse_nodes(external_nodes)
-        right_angle_node = list(set(external_nodes) - set(hypotenuse_nodes))
+        right_angle_node = list(
+            filter(lambda node: node not in hypotenuse_nodes, external_nodes)
+        )
 
-        hypotenuse_middle_node = _create_middle_node(graph, *hypotenuse_nodes)
-        new_hypotenuse_nodes = _move_down_nodes(graph, hypotenuse_nodes)
-        [new_right_angle_node] = _move_down_nodes(graph, right_angle_node)
+        hypotenuse_middle_node = Node(
+            next_id_val_fun(), _hypotenuse_middle_node_params(*hypotenuse_nodes)
+        )
+        new_hypotenuse_nodes = list(
+            map(
+                lambda params: Node(next_id_val_fun(), params),
+                _get_params_with_lower_level(hypotenuse_nodes),
+            )
+        )
+        new_right_angle_node = Node(
+            next_id_val_fun(), _get_params_with_lower_level(right_angle_node)[0]
+        )
 
         new_level_nodes: list[Node] = [
             hypotenuse_middle_node,
@@ -192,6 +208,6 @@ class Production2(Production):
         )
 
         new_graph.add_nodes_from(new_level_raw_nodes)
-        new_graph.add_nodes_from(new_level_edges)
+        new_graph.add_edges_from(new_level_edges)
 
         return new_graph
