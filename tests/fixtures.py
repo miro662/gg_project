@@ -2,6 +2,7 @@ import dataclasses
 
 import networkx as nx
 import pytest
+
 from gg_project.productions.p1 import Production1
 from gg_project.vertex_params import VertexParams, VertexType
 
@@ -31,5 +32,5 @@ def production1():
 
 @pytest.fixture
 def graph_after_first_production(start_graph, production1):
-    subgraph = production1.find_isomorphic_to_left_side(start_graph)
+    subgraph = next(production1.find_isomorphic_to_left_side(start_graph))
     return production1.apply(start_graph, subgraph)
