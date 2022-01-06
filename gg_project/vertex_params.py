@@ -15,7 +15,7 @@ class VertexType(str, Enum):
     INTERIOR_USED = "i"
 
 
-@dataclass
+@dataclass(eq=True)
 class VertexParams:
     """Contains internal parameters of a vertex"""
 
