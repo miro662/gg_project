@@ -20,7 +20,7 @@ def start_graph():
                 0,
                 dataclasses.asdict(
                     VertexParams(
-                        vertex_type=VertexType.START, position=(0.0, 0.0), level=0
+                        vertex_type=VertexType.START, position=(0.5, 0.5), level=0
                     )
                 ),
             )
