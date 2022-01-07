@@ -13,10 +13,6 @@ Node = collections.namedtuple("Node", ["id", "params"])
 
 
 class Production7(Production):
-    """Implementation of second production from documentation.
-
-    This production takes an unbroken triangle tile from a graph and produces a new break.
-    """
 
     @classmethod
     def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> nx.Graph | None:
@@ -48,9 +44,6 @@ class Production7(Production):
                                 if E3R is not E1 and is_node_between(E1, E2R, E3R):
                                     new_graph = merge_two_nodes(new_graph, E2L, E2R, max_node_id+1)
                                     new_graph = merge_two_nodes(new_graph, E3L, E3R, max_node_id+2)
-
-                                    for a, _ in new_graph.nodes.items():
-                                        print(str(a) + ',')
                                     return new_graph
 
 
@@ -95,7 +88,8 @@ def get_neighbors_of_type(graph: nx.Graph, nodes: list[Node], node: Node, vertex
 
 
 def is_node_between(E1: Node, E2: Node, E3: Node) -> bool:
-    return E2.params.position[0] == (E1.params.position[0] + E3.params.position[0]) / 2 and E2.params.position[1] == (E1.params.position[1] + E3.params.position[1]) / 2
+    return E2.params.position[0] == (E1.params.position[0] + E3.params.position[0]) / 2 \
+           and E2.params.position[1] == (E1.params.position[1] + E3.params.position[1]) / 2
 
 
 def merge_two_nodes(graph: nx.Graph, node_1: Node, node_2: Node, new_id: int):

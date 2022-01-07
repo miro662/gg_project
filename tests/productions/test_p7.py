@@ -22,7 +22,6 @@ def _are_graphs_matching(g1: nx.Graph, g2: nx.Graph) -> bool:
 def test_applies_to_graph_after_first_production(
         graph_before_seventh_production, graph_after_seventh_production, production7
 ):
-    subgraph = production7.find_isomorphic_to_left_side(graph_before_seventh_production)
-    graph_after_applying = production7.apply(graph_before_seventh_production, subgraph)
+    graph_after_applying = production7.apply(graph_before_seventh_production, None)
 
     assert _are_graphs_matching(graph_after_applying, graph_after_seventh_production)
