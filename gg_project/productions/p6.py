@@ -60,8 +60,19 @@ class Production6(Production):
                     all_connected_subgraphs.append(SG)
 
             for subgraph in all_connected_subgraphs:
-                if nx.is_isomorphic(subgraph, isomorphic_graph):
-                    return subgraph
+                if nx.is_isomorphic(subgraph, isomorphic_graph, node_match=_are_types_equal):
+                    nodes: list[Node] = list(
+                        map(
+                            lambda node: Node(node[0], VertexParams(**node[1])),
+                            subgraph.nodes.items(),
+                        ),
+                    )
+
+                    exterior_nodes: list[Node] = list(
+                        filter(lambda x: x[1].vertex_type == VertexType.EXTERIOR, nodes)
+                    )
+                    if len(list(_get_duplicates_with_label(exterior_nodes))) == 3:
+                        return subgraph
 
         return None
 
@@ -120,3 +131,7 @@ def _merge_two_nodes(graph: nx.Graph, node_1: Node, node_2: Node, new_id: int):
 
 def _mk_vertex(t):
     return asdict(VertexParams(vertex_type=t, position=(0.0, 0.0), level=0))
+
+
+def _are_types_equal(node1, node2) -> bool:
+    return VertexParams(**node1).vertex_type == VertexParams(**node2).vertex_type
