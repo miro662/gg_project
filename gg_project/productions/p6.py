@@ -1,6 +1,8 @@
 """ Implementation of production number 6
 """
 import dataclasses
+import itertools
+from dataclasses import asdict
 from itertools import combinations
 
 import networkx as nx
@@ -13,11 +15,61 @@ from gg_project.vertex_params import VertexParams, VertexType
 class Production6(Production):
     @classmethod
     def find_isomorphic_to_left_side(cls, graph: nx.Graph) -> nx.Graph | None:
-        # FIXME: add later
+        isomorphic_graph = nx.Graph()
+        isomorphic_graph.add_nodes_from(
+            [
+                (1, _mk_vertex(VertexType.EXTERIOR)),
+                (2, _mk_vertex(VertexType.EXTERIOR)),
+
+                (3, _mk_vertex(VertexType.INTERIOR_USED)),
+                (4, _mk_vertex(VertexType.INTERIOR_USED)),
+
+                (5, _mk_vertex(VertexType.INTERIOR)),
+                (6, _mk_vertex(VertexType.INTERIOR)),
+                (7, _mk_vertex(VertexType.INTERIOR)),
+                (8, _mk_vertex(VertexType.INTERIOR)),
+
+                (9, _mk_vertex(VertexType.EXTERIOR)),
+                (10, _mk_vertex(VertexType.EXTERIOR)),
+
+                (11, _mk_vertex(VertexType.EXTERIOR)),
+                (12, _mk_vertex(VertexType.EXTERIOR)),
+
+                (13, _mk_vertex(VertexType.EXTERIOR)),
+                (14, _mk_vertex(VertexType.EXTERIOR)),
+            ]
+        )
+
+        isomorphic_graph.add_edges_from(
+            [
+                (1, 2), (1, 3), (2, 3), (1, 4), (2, 4), (3, 5),
+                (3, 6), (4, 7), (4, 8), (9, 5), (10, 7), (11, 9),
+                (12, 10), (12, 7), (12, 8), (13, 11), (11, 5), (11, 6),
+                (13, 6), (14, 12), (14, 8)
+            ]
+        )
+
+        node_diff = len(graph.nodes) - len(isomorphic_graph.nodes)
+
+        if node_diff >= 0:
+            all_connected_subgraphs = []
+
+            for SG in (graph.subgraph(selected_nodes) for selected_nodes in
+                       itertools.combinations(graph, len(isomorphic_graph))):
+                if nx.is_connected(SG):
+                    all_connected_subgraphs.append(SG)
+
+            for subgraph in all_connected_subgraphs:
+                if nx.is_isomorphic(subgraph, isomorphic_graph):
+                    return subgraph
+
         return None
 
     @classmethod
     def apply(cls, graph: nx.Graph, subgraph: nx.Graph) -> nx.Graph:
+        if cls.find_isomorphic_to_left_side(subgraph) is None:
+            raise ValueError("Subgraph is not isomorphic to left side")
+
         next_id_val_fun = graph_id_sequence(graph)
 
         new_graph = graph.copy()
@@ -64,3 +116,7 @@ def _merge_two_nodes(graph: nx.Graph, node_1: Node, node_2: Node, new_id: int):
     graph.remove_node(node_2.id)
 
     return graph
+
+
+def _mk_vertex(t):
+    return asdict(VertexParams(vertex_type=t, position=(0.0, 0.0), level=0))
