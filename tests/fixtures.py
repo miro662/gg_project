@@ -2,6 +2,7 @@ import dataclasses
 
 import networkx as nx
 import pytest
+
 from gg_project.productions.p1 import Production1
 from gg_project.vertex_params import VertexParams, VertexType
 

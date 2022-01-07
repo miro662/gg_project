@@ -30,5 +30,5 @@ def test_graph_after_first_production_is_applied(start_graph, production1):
     new_graph = production1.apply(start_graph, subgraph)
 
     # then
-    assert len(new_graph) == 1
+    assert len(new_graph) == 7
     assert new_graph.nodes[0]["vertex_type"] == VertexType.START_USED
