@@ -20,3 +20,15 @@ def test_does_not_find_anything_in_non_start_graph(
 
     # then
     assert subgraph is None
+
+
+def test_graph_after_first_production_is_applied(start_graph, production1):
+    # given
+    subgraph = production1.find_isomorphic_to_left_side(start_graph)
+
+    # when
+    new_graph = production1.apply(start_graph, subgraph)
+
+    # then
+    assert len(new_graph) == 7
+    assert new_graph.nodes[0]["vertex_type"] == VertexType.START_USED
