@@ -28,7 +28,7 @@ Node = collections.namedtuple("Node", ["id", "params"])
 
 def _get_neighbors_of_type(
     graph: nx.Graph, node_id: NodeId, vertex_type: VertexType
-) -> list[Node]:
+) -> list[NodeId]:
     return [
         neighbor
         for neighbor in graph.neighbors(node_id)
@@ -131,7 +131,7 @@ class Production2(Production):
                 continue
 
             with contextlib.suppress(nx.NetworkXNoCycle):
-                nx.find_cycle(graph, graph.subgraph(exterior_neighbors))
+                cycle = nx.find_cycle(graph.subgraph(exterior_neighbors))
                 return graph.subgraph([node_id, *exterior_neighbors])
 
         return None
