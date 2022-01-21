@@ -2,8 +2,11 @@ import dataclasses
 
 import networkx as nx
 import pytest
+
 from gg_project.productions.p1 import Production1
 from gg_project.productions.p2 import Production2
+from gg_project.productions.p3 import Production3
+from gg_project.productions.p6 import Production6
 from gg_project.productions.p7 import Production7
 from gg_project.vertex_params import VertexParams, VertexType
 
@@ -35,7 +38,17 @@ def production1():
 def production2():
     return Production2()
 
+  
+@pytest.fixture
+def production3():
+    return Production3()
 
+  
+@pytest.fixture
+def production6():
+    return Production6()
+  
+  
 @pytest.fixture
 def production7():
     return Production7()
