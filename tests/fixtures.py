@@ -464,6 +464,8 @@ def graph_before_seventh_production(start_graph, production1):
             (16, 18),
             (8, 18),
             (15, 18),
+            (6, 18),
+            (16, 15)
         ]
     )
 
